@@ -106,34 +106,57 @@ class Chessboard:
     def place_piece(self, piece, row, col):
         self.board[row][col] = piece
 
-    def move_piece(self, start_row, start_col, end_row, end_col):
+    def move_piece(self, turn, start_row, start_col, end_row, end_col):
         piece = self.board[start_row][start_col]
         if not piece:
             print("No piece found at the specified position.")
-            return
-        if self.is_valid_move(piece, start_row, start_col, end_row, end_col):
+            #return 0
+        if self.is_valid_move(piece, turn, start_row, start_col, end_row, end_col):
             self.board[end_row][end_col] = piece
             self.board[start_row][start_col] = ''
             piece.position = (end_row, end_col)
+            turn = not turn
+            return turn
         else:
             print("Invalid move.")
+            #return 0
 
-    def is_valid_move(self, piece, start_row, start_col, end_row, end_col):
+    def is_valid_move(self, piece, turn, start_row, start_col, end_row, end_col):
+        target_piece = self.board[end_row][end_col]
+
+        if target_piece and target_piece.color == piece.color:
+            # Ruch na zajęte pole przez figurę tego samego koloru
+            return False
+
+        if (turn == True and piece.color == "Black") or (turn == False and piece.color == "White"):
+            return False
         if isinstance(piece, Pawn):
             # Logika dla pionka
             if piece.color == 'White':
                 if start_row == 1:
                     if end_row - start_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]:
                         return True
+                    elif end_row - start_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
+                            self.board[end_row][end_col].color == 'Black':
+                        return True
                 else:
                     if end_row - start_row == 1 and start_col == end_col and not self.board[end_row][end_col]:
+                        return True
+                    elif end_row - start_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
+                            self.board[end_row][end_col].color == 'Black':
                         return True
             else:
                 if start_row == 6:
                     if start_row - end_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]:
                         return True
+                    elif start_row - end_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
+                            self.board[end_row][end_col].color == 'White':
+                        return True
                 else:
                     if start_row - end_row == 1 and start_col == end_col and not self.board[end_row][end_col]:
+                        return True
+                    elif start_row - end_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
+                            self.board[end_row][end_col].color == 'White':
                         return True
         elif isinstance(piece, Knight):
             # Logika dla skoczka
@@ -217,20 +240,24 @@ class King(Piece):
         return 'King'
 
 
-
-
 # Użycie klas
 if __name__ == '__main__':
     chessboard = Chessboard()
     chessboard.startgame()
     chessboard.print_board()
+    turn = True
 
     while True:
+        if turn == True:
+            print("White turn")
+        else:
+            print("Black turn")
         start_row = int(input("Enter start row: "))
         start_col = int(input("Enter start column: "))
         end_row = int(input("Enter end row: "))
         end_col = int(input("Enter end column: "))
-        chessboard.move_piece(start_row, start_col, end_row, end_col)
+        #chessboard.move_piece(turn, start_row, start_col, end_row, end_col)
+        turn=chessboard.move_piece(turn, start_row, start_col, end_row, end_col)
         chessboard.print_board()
         continue_game = input("Continue the game? (y/n): ")
         if continue_game.lower() != 'y':
