@@ -106,85 +106,126 @@ class Chessboard:
     def place_piece(self, piece, row, col):
         self.board[row][col] = piece
 
-    def move_piece(self, turn, start_row, start_col, end_row, end_col):
+    def move_piece(self, turn, en_passant, start_row, start_col, end_row, end_col):
         piece = self.board[start_row][start_col]
+        result, en_passant = self.is_valid_move(piece, turn, en_passant, start_row, start_col, end_row, end_col)
         if not piece:
             print("No piece found at the specified position.")
-            #return 0
-        if self.is_valid_move(piece, turn, start_row, start_col, end_row, end_col):
+            return turn, en_passant
+        if  result: #self.is_valid_move(piece, turn, en_passant, start_row, start_col, end_row, end_col):
             self.board[end_row][end_col] = piece
             self.board[start_row][start_col] = ''
             piece.position = (end_row, end_col)
             turn = not turn
-            return turn
+            return turn, en_passant
         else:
             print("Invalid move.")
-            #return 0
+            return turn, en_passant
 
-    def is_valid_move(self, piece, turn, start_row, start_col, end_row, end_col):
+    def is_valid_move(self, piece, turn, en_passant, start_row, start_col, end_row, end_col):
         target_piece = self.board[end_row][end_col]
+        try:
+            if target_piece and target_piece.color == piece.color:                                                      #Ruch na zajęte pole przez figurę tego samego koloru
+                return False, None
+        except:
+            return False, None
 
-        if target_piece and target_piece.color == piece.color:
-            # Ruch na zajęte pole przez figurę tego samego koloru
-            return False
-
-        if (turn == True and piece.color == "Black") or (turn == False and piece.color == "White"):
-            return False
+        if (turn == True and piece.color == "Black") or (turn == False and piece.color == "White"):                 #Ruch czarnym, jak jest ruch białych i na odwrót
+            return False, None
         if isinstance(piece, Pawn):
-            # Logika dla pionka
+            #Logika dla pionka białego
             if piece.color == 'White':
                 if start_row == 1:
-                    if end_row - start_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]:
-                        return True
-                    elif end_row - start_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
-                            self.board[end_row][end_col].color == 'Black':
-                        return True
-                else:
-                    if end_row - start_row == 1 and start_col == end_col and not self.board[end_row][end_col]:
-                        return True
-                    elif end_row - start_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
-                            self.board[end_row][end_col].color == 'Black':
-                        return True
+                    if end_row - start_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]: #Jeżeli to pierwszy ruch białego i ruszył się o jedno lub dwa pola do przodu
+                        if (end_row - start_row == 2):                                                              #dodatkowo jeżeli ruszył się o 2, to może zostać zbity w przelocie
+                            en_passant=[end_row-1, end_col]
+                        return True, en_passant
+                    elif (                                                                                          #Czy jest czarna figura możliwa do zbicia po skosie o jedno pole
+                            end_row - start_row == 1
+                            and abs(end_col - start_col) == 1
+                            and self.board[end_row][end_col]
+                            and self.board[end_row][end_col].color == 'Black'
+                    ):
+                        return True, None
+                else:                                                                                               #Jeżeli nie jest to pierszy ruch
+                    if end_row - start_row == 1 and start_col == end_col and not self.board[end_row][end_col]:      #zwykły ruch o jeden w górę
+                        return True, None
+                    elif (                                                                                          #Czy jest czarna figura możliwa do zbicia po skosie o jedno pole
+                            end_row - start_row == 1
+                            and abs(end_col - start_col) == 1
+                            and self.board[end_row][end_col]
+                            and self.board[end_row][end_col].color == 'Black'
+                    ):
+                        return True, None
+                    elif (                                                                                          #Bicie w przelocie
+                            end_row - start_row == 1
+                            and abs(end_col - start_col) == 1
+                            and start_row == 4
+                            and end_row == en_passant[0]
+                            and end_col == en_passant[1]
+
+                    ):
+                        self.board[end_row-1][end_col] = ''                                                         #Usunięcie zbitego w przelocie pionka
+                        return True, None
             else:
+                # Logika dla pionka czarnego
                 if start_row == 6:
-                    if start_row - end_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]:
-                        return True
-                    elif start_row - end_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
-                            self.board[end_row][end_col].color == 'White':
-                        return True
-                else:
-                    if start_row - end_row == 1 and start_col == end_col and not self.board[end_row][end_col]:
-                        return True
-                    elif start_row - end_row == 1 and abs(end_col - start_col) == 1 and self.board[end_row][end_col] and \
-                            self.board[end_row][end_col].color == 'White':
-                        return True
+                    if start_row - end_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]: #Jeżeli to pierwszy ruch białego i ruszył się o jedno lub dwa pola do przodu
+                        if (start_row - end_row == 2):                                                              #dodatkowo jeżeli ruszył się o 2, to może zostać zbity w przelocie
+                            en_passant=[end_row+1, end_col]
+                        return True, en_passant
+                    elif (                                                                                          #Czy jest biała figura możliwa do zbicia po skosie o jedno pole
+                            start_row - end_row == 1
+                            and abs(end_col - start_col) == 1
+                            and self.board[end_row][end_col]
+                            and self.board[end_row][end_col].color == 'White'
+                    ):
+                        return True, None
+                else:                                                                                               #Jeżeli nie jest to pierszy ruch
+                    if start_row - end_row == 1 and start_col == end_col and not self.board[end_row][end_col]:      #zwykły ruch o jeden w górę
+                        return True, None
+                    elif (                                                                                          #Czy jest biała figura możliwa do zbicia po skosie o jedno pole
+                            start_row - end_row == 1
+                            and abs(end_col - start_col) == 1
+                            and self.board[end_row][end_col]
+                            and self.board[end_row][end_col].color == 'White'
+                    ):
+                        return True, None
+                    elif (                                                                                          #Bicie w przelocie
+                            start_row - end_row == 1
+                            and abs(end_col - start_col) == 1
+                            and start_row == 3
+                            and end_row == en_passant[0]
+                            and end_col == en_passant[1]
+                    ):
+                        self.board[end_row + 1][end_col] = ''                                                       #Usunięcie zbitego w przelocie pionka
+                        return True, None
         elif isinstance(piece, Knight):
             # Logika dla skoczka
             diff_row = abs(end_row - start_row)
             diff_col = abs(end_col - start_col)
-            return (diff_row, diff_col) in [(1, 2), (2, 1)]
+            return (diff_row, diff_col) in [(1, 2), (2, 1)], None
         elif isinstance(piece, Rook):
             # Logika dla wieży
             if start_row == end_row or start_col == end_col:
-                return True
+                return True, None
         elif isinstance(piece, Bishop):
             # Logika dla gońca
             diff_row = abs(end_row - start_row)
             diff_col = abs(end_col - start_col)
-            return diff_row == diff_col
+            return diff_row == diff_col, None
         elif isinstance(piece, Queen):
             # Logika dla królowej
             diff_row = abs(end_row - start_row)
             diff_col = abs(end_col - start_col)
-            return (start_row == end_row or start_col == end_col) or (diff_row == diff_col)
+            return (start_row == end_row or start_col == end_col) or (diff_row == diff_col), None
         elif isinstance(piece, King):
             # Logika dla króla
             diff_row = abs(end_row - start_row)
             diff_col = abs(end_col - start_col)
-            return diff_row <= 1 and diff_col <= 1
+            return diff_row <= 1 and diff_col <= 1, None
         # Dodaj logikę dla innych pionków
-        return False
-
+        return False, None
 
 class Piece:
     def __init__(self, color, position):
@@ -246,18 +287,19 @@ if __name__ == '__main__':
     chessboard.startgame()
     chessboard.print_board()
     turn = True
+    en_passant = None
 
     while True:
         if turn == True:
             print("White turn")
         else:
             print("Black turn")
+        print(en_passant)
         start_row = int(input("Enter start row: "))
         start_col = int(input("Enter start column: "))
         end_row = int(input("Enter end row: "))
         end_col = int(input("Enter end column: "))
-        #chessboard.move_piece(turn, start_row, start_col, end_row, end_col)
-        turn=chessboard.move_piece(turn, start_row, start_col, end_row, end_col)
+        turn, en_passant =chessboard.move_piece(turn, en_passant, start_row, start_col, end_row, end_col)
         chessboard.print_board()
         continue_game = input("Continue the game? (y/n): ")
         if continue_game.lower() != 'y':
