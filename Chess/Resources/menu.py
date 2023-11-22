@@ -28,9 +28,14 @@ print(bg_image.get_size())
 # tworzenie menu
 menu = pygame_menu.Menu(title="Chess Game", width=400, height=600,
                         theme=pygame_menu.themes.THEME_DEFAULT)
-menu.add.button(title="Play")
+
+submenu = pygame_menu.Menu(title="Ustawienia gry", width=menu.get_width(), height=menu.get_height())
+
+menu.add.button(title="Play", action=submenu)
+menu.add.button(title="New To Chess")
+menu.add.button(title="Authors")
 menu.add.button(title="Quit", action=pygame_menu.events.EXIT)
-menu.add.label("v 0.2").set_padding((50, 0, 0, 0))
+# menu.add.label("v 0.2").set_padding((50, 0, 0, 0))
 
 
 # Główna pętla
