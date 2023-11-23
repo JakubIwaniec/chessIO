@@ -17,6 +17,7 @@ def update_background() -> None:
 # stałe
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
+REFRESH_RATE = 60
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -50,6 +51,5 @@ while True:
     # ...
 
     menu.mainloop(window, bgfun=update_background)
-    menu.force_surface_update()
-    # Odświeżanie
-    clock.tick(60)      # (60 FPS)
+    pygame.display.flip()
+    clock.tick(REFRESH_RATE)
