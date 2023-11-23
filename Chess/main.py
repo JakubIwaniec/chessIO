@@ -286,11 +286,12 @@ if __name__ == '__main__':
     chessboard = Chessboard()
     chessboard.startgame()
     chessboard.print_board()
-    turn = True
+    is_white_turn = True
     en_passant = None
 
-    while True:
-        if turn == True:
+    continue_game = True
+    while continue_game:
+        if is_white_turn:
             print("White turn")
         else:
             print("Black turn")
@@ -301,6 +302,6 @@ if __name__ == '__main__':
         end_col = int(input("Enter end column: "))
         turn, en_passant =chessboard.move_piece(turn, en_passant, start_row, start_col, end_row, end_col)
         chessboard.print_board()
-        continue_game = input("Continue the game? (y/n): ")
-        if continue_game.lower() != 'y':
-            break
+        continue_game_input = input("Continue the game? (y/n): ")
+        if continue_game_input.lower() != 'y':
+            continue_game = False
