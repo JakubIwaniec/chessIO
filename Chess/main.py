@@ -2,7 +2,8 @@ class Chessboard:
     def __init__(self):
         self.board = [['' for _ in range(8)] for _ in range(8)]
 
-    def startgame(self):
+    @staticmethod
+    def startgame() -> None:
         white_rookA = Rook('White', (0, 0))
         chessboard.place_piece(white_rookA, 0, 0)
 
@@ -112,7 +113,7 @@ class Chessboard:
         if not piece:
             print("No piece found at the specified position.")
             return turn, en_passant
-        if  result: #self.is_valid_move(piece, turn, en_passant, start_row, start_col, end_row, end_col):
+        if result:  # self.is_valid_move(piece, turn, en_passant, start_row, start_col, end_row, end_col):
             self.board[end_row][end_col] = piece
             self.board[start_row][start_col] = ''
             piece.position = (end_row, end_col)
@@ -133,12 +134,12 @@ class Chessboard:
         if (turn == True and piece.color == "Black") or (turn == False and piece.color == "White"):                 #Ruch czarnym, jak jest ruch białych i na odwrót
             return False, None
         if isinstance(piece, Pawn):
-            #Logika dla pionka białego
+            # Logika dla pionka białego
             if piece.color == 'White':
                 if start_row == 1:
                     if end_row - start_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]: #Jeżeli to pierwszy ruch białego i ruszył się o jedno lub dwa pola do przodu
-                        if (end_row - start_row == 2):                                                              #dodatkowo jeżeli ruszył się o 2, to może zostać zbity w przelocie
-                            en_passant=[end_row-1, end_col]
+                        if (end_row - start_row) == 2:                                                              #dodatkowo jeżeli ruszył się o 2, to może zostać zbity w przelocie
+                            en_passant = [end_row-1, end_col]
                         return True, en_passant
                     elif (                                                                                          #Czy jest czarna figura możliwa do zbicia po skosie o jedno pole
                             end_row - start_row == 1
@@ -171,8 +172,8 @@ class Chessboard:
                 # Logika dla pionka czarnego
                 if start_row == 6:
                     if start_row - end_row in (1, 2) and start_col == end_col and not self.board[end_row][end_col]: #Jeżeli to pierwszy ruch białego i ruszył się o jedno lub dwa pola do przodu
-                        if (start_row - end_row == 2):                                                              #dodatkowo jeżeli ruszył się o 2, to może zostać zbity w przelocie
-                            en_passant=[end_row+1, end_col]
+                        if (start_row - end_row) == 2:                                                              #dodatkowo jeżeli ruszył się o 2, to może zostać zbity w przelocie
+                            en_passant = [end_row+1, end_col]
                         return True, en_passant
                     elif (                                                                                          #Czy jest biała figura możliwa do zbicia po skosie o jedno pole
                             start_row - end_row == 1
@@ -227,6 +228,7 @@ class Chessboard:
         # Dodaj logikę dla innych pionków
         return False, None
 
+
 class Piece:
     def __init__(self, color, position):
         self.color = color
@@ -237,6 +239,12 @@ class Pawn(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
+    def __repr__(self):
+        if self.color == 'White':
+            return 'p'
+        elif self.color == 'Black':
+            return 'P'
+
     def __str__(self):
         return 'Pawn'
 
@@ -244,6 +252,12 @@ class Pawn(Piece):
 class Rook(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
+
+    def __repr__(self):
+        if self.color == 'White':
+            return 'r'
+        elif self.color == 'Black':
+            return 'R'
 
     def __str__(self):
         return 'Rook'
@@ -253,6 +267,12 @@ class Knight(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
+    def __repr__(self):
+        if self.color == 'White':
+            return 'n'
+        elif self.color == 'Black':
+            return 'N'
+
     def __str__(self):
         return 'Knight'
 
@@ -260,6 +280,12 @@ class Knight(Piece):
 class Bishop(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
+
+    def __repr__(self):
+        if self.color == 'White':
+            return 'b'
+        elif self.color == 'Black':
+            return 'B'
 
     def __str__(self):
         return 'Bishop'
@@ -269,6 +295,12 @@ class Queen(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
+    def __repr__(self):
+        if self.color == 'White':
+            return 'q'
+        elif self.color == 'Black':
+            return 'Q'
+
     def __str__(self):
         return 'Queen'
 
@@ -276,6 +308,12 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
+
+    def __repr__(self):
+        if self.color == 'White':
+            return 'k'
+        elif self.color == 'Black':
+            return 'K'
 
     def __str__(self):
         return 'King'
@@ -300,7 +338,7 @@ if __name__ == '__main__':
         start_col = int(input("Enter start column: "))
         end_row = int(input("Enter end row: "))
         end_col = int(input("Enter end column: "))
-        turn, en_passant =chessboard.move_piece(turn, en_passant, start_row, start_col, end_row, end_col)
+        is_white_turn, en_passant = chessboard.move_piece(is_white_turn, en_passant, start_row, start_col, end_row, end_col)
         chessboard.print_board()
         continue_game_input = input("Continue the game? (y/n): ")
         if continue_game_input.lower() != 'y':
