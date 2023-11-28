@@ -8,12 +8,14 @@ import pygame
 import pygame_menu
 
 # stałe
+import Chess.main
+
 WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 800
 MAIN_MENU_WIDTH = 400
 MAIN_MENU_HEIGHT = 600
-MINIMAL_BOARD_WIDTH = 800
-MINIMAL_BOARD_HEIGHT = 800
+BOARD_WIDTH = 1024
+BOARD_HEIGHT = 720
 REFRESH_RATE = 60
 AUTHORS = 'Made by:\n'\
         'Jakub Iwaniec\n' \
@@ -89,15 +91,63 @@ class Menus:
 
 
 class GameEngine:
-    def __init__(self, surface_window: pygame.Surface):
-        assert type(surface_window) is pygame.Surface
-        self._game_engine_window = surface_window
-        self._game_engine_board = None
+    def __init__(self):
+        self._window = None
+        self._board_surface = None
+        self._board_image = None # dodaj set_engine_board_image
+        self._skin_pack = None # tutaj czy moze w pieces.py ???
+        self._chessboard_state = None
+        pygame.mixer.init()
         pygame.init()
 
-    @classmethod
-    def run_game(cls):
-        pass
+    def set_engine_window(self, new_window: pygame.Surface):
+        assert type(new_window) is pygame.Surface
+        self._window = new_window
+
+    def set_engine_board_surface(self, new_board_surface: pygame.Rect):
+        assert type(new_board_surface) is pygame.Rect
+        self._board_surface = new_board_surface
+
+    def set_engine_chessboard_state(self, new_chessboard_state):
+        assert type(new_chessboard_state) is list
+        self._chessboard_state = new_chessboard_state
+
+    @staticmethod
+    def run_game():
+        chessboard = Chess.main.Chessboard()
+        Chess.main.Chessboard.startgame(chessboard)
+        print(chessboard.board)
+        for row in chessboard.board:
+            for element in row:
+                """
+                if type(chessboard.board[element]) is Chess.main.Rook:
+                    assert chessboard.board[element] is Chess.main.Rook
+                    if chessboard.board[element].__repr__ == 'r':
+                        pass
+                        # jeśli wieża:
+                        # weź obraz przechowywany w podklasach klasy pieces
+                        # otrzymaj wymiary danej subsurface kratki i współrzędną
+                print(" ", )
+                """
+
+        chessboard.print_board()
+        window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
+        board_surface = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT))
+        board_image = pygame.image.load("Images\\Chessboards\\Szachownica3.jpg")
+        board_image = pygame.transform.scale(board_image, (BOARD_WIDTH, BOARD_HEIGHT))
+        board_surface.blit(board_image, (0, 0))
+        window.blit(board_surface, (0, 0))
+        pygame.display.flip()
+        engine = GameEngine()
+        engine.set_engine_window(window)
+        is_running = True
+        while is_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    raise SystemExit
+
+            pygame.display.flip()
 
     @staticmethod
     def test_gui():
@@ -107,7 +157,7 @@ class GameEngine:
             bg_image.draw(surface=window)
 
         clock = pygame.time.Clock()
-
+        window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         bg_image = pygame_menu.BaseImage(image_path="Images/Backgrounds/main_menu2.jpg")
         # roboczy test, czy poprawnie załadowało plik .jpg
         print(bg_image.get_size())
@@ -135,7 +185,6 @@ class SoundEngine:
     # do dokończenia
 
 
-window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-engine = GameEngine(window)
-engine.run_game()
-engine.test_gui()
+test = GameEngine()
+# test.test_gui()
+test.run_game()
