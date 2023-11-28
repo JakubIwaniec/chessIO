@@ -233,11 +233,18 @@ class Piece:
     def __init__(self, color, position):
         self.color = color
         self.position = position
+        self.path_to_image = None
 
 
 class Pawn(Piece):
+    # wzór do skopiowania (Ułaniec masz)
     def __init__(self, color, position):
         super().__init__(color, position)
+        if super().color == 'White':
+            # ! inny plik w zaleznosci od podklasy i koloru
+            super().path_to_image = 'Images\\FigureSkins\\wP.jpg'
+        elif super().color == 'Black':
+            super().path_to_image = 'Images\\FigureSkins\\bP.jpg'
 
     def __repr__(self):
         if self.color == 'White':
