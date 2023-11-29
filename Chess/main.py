@@ -1,4 +1,6 @@
-from Piece import *
+from Chess.Piece import *
+
+
 class Chessboard:
     def __init__(self):
         self.board = [['' for _ in range(8)] for _ in range(8)]

@@ -9,6 +9,7 @@ import pygame_menu
 from typing import Optional
 
 import Chess.main
+import Chess.Piece
 
 # --- STAłE ---
 # stałe Menus
@@ -120,11 +121,23 @@ class GameEngine:
         self.beatbox = SoundEngine()
         pygame.init()
 
-    class Square(pygame.sprite.Sprite):
-        def __init__(self):
-            super(pygame.sprite.Sprite, self).__init__()
-            self.surf = BOARD_SQUARE_SIZE
-            self.start_point = (0, 0)
+    class BoardSquare(pygame.sprite.Sprite):
+        def __init__(self, start_point: tuple = (0, 0)):
+            super().__init__()
+            self.surf = pygame.Surface(BOARD_SQUARE_SIZE)
+            self.surf_rect = None
+            self._image = None
+            assert type(start_point) is tuple
+            self.start_point = start_point
+            self.surf.fill((0, 0, 255))
+
+        def set_image(self, piece_element: Chess.Piece.Rook):
+            print(piece_element)
+            assert type(piece_element) is Chess.Piece.Rook
+            piece_element_image = pygame.image.load(piece_element.path_to_image)
+            self.surf_rect = piece_element_image.get_rect()
+            self._image = piece_element_image
+            self.surf.blit(piece_element_image, (0, 0))
 
     def set_engine_window(self, new_window: pygame.Surface):
         assert type(new_window) is pygame.Surface
@@ -163,6 +176,10 @@ class GameEngine:
         board_image = pygame.transform.scale(board_image, (BOARD_WIDTH, BOARD_HEIGHT))
         board_surface.blit(board_image, (0, 0))
         window.blit(board_surface, (0, 0))
+        sprite = GameEngine.BoardSquare()
+        sprite.set_image(chessboard.board[0][0])
+        board_surface.subsurface(sprite.surf_rect)
+        board_surface.blit(sprite._image, (0, 0))
         pygame.display.flip()
         engine = GameEngine()
         engine.set_engine_window(window)
