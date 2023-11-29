@@ -6,27 +6,37 @@ związane z GUI
 
 import pygame
 import pygame_menu
+from typing import Optional
 
-# stałe
 import Chess.main
 
+# --- STAłE ---
+# stałe Menus
 WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 800
 MAIN_MENU_WIDTH = 400
 MAIN_MENU_HEIGHT = 600
-BOARD_WIDTH = 1024
-BOARD_HEIGHT = 720
-REFRESH_RATE = 60
 AUTHORS = 'Made by:\n'\
         'Jakub Iwaniec\n' \
         'Mikołaj Dettlaff\n' \
         'Miłosz Gostyński'
+# stałe GameEngine
+BOARD_WIDTH = 1000
+BOARD_HEIGHT = 1000
+BOARD_SQUARE_FIRST = (69, 69)
+BOARD_SQUARE_SIZE = (107, 107)
+BOARD_SQUARE_SPACING_PIXELS = 1
+REFRESH_RATE = 60
+
+# ---       ---
 
 
 class Menus:
     # tworzenie wszystkich obiektów wszystkich menu
     def __init__(self):
         Menus._assert_constants_test()
+        self._beatbox_gui = pygame_menu.Sound()
+        self._beatbox_gui.load_example_sounds()
 
         self.menu = pygame_menu.Menu(
             title="Chess Game", width=MAIN_MENU_WIDTH, height=MAIN_MENU_HEIGHT, theme=pygame_menu.themes.THEME_DEFAULT)
@@ -42,6 +52,7 @@ class Menus:
         Menus._add_properties_submenu_play(self)
         Menus._add_properties_submenu_help(self)
         Menus._add_properties_submenu_authors(self)
+        Menus._add_properties_sounds(self)
 
     # testy defensywne stałych
     @staticmethod
@@ -54,7 +65,7 @@ class Menus:
     @staticmethod
     def _add_properties_menu(self) -> None:
         self.menu.add.button(title="Play", action=self.submenu_play)
-        self.menu.add.button(title="New To Chess?", action=self.submenu_help)
+        self.menu.add.button(title="Guide to Chess", action=self.submenu_help)
         self.menu.add.button(title="Authors", action=self.submenu_authors)
         self.menu.add.button(title="Quit", action=pygame_menu.events.EXIT)
 
@@ -77,7 +88,7 @@ class Menus:
             selection_option_padding=(0, 5),
             selection_option_font_size=20
         )
-        self.submenu_play.add.button(title="Begin game", action=pygame_menu.events.NONE)
+        self.submenu_play.add.button(title="Begin game", action=GameEngine.run_game)
 
     @staticmethod
     def _add_properties_submenu_help(self) -> None:
@@ -89,16 +100,31 @@ class Menus:
     def _add_properties_submenu_authors(self) -> None:
         self.submenu_authors.add.label(AUTHORS, max_char=-1, font_size=20)
 
+    @staticmethod
+    def _add_properties_sounds(self) -> None:
+        self.menu.set_sound(self._beatbox_gui, recursive=True)
+        self.submenu_play.set_sound(self._beatbox_gui, recursive=True)
+        self.submenu_help.set_sound(self._beatbox_gui, recursive=True)
+        self.submenu_authors.set_sound(self._beatbox_gui, recursive=True)
+
 
 class GameEngine:
     def __init__(self):
-        self._window = None
-        self._board_surface = None
-        self._board_image = None # dodaj set_engine_board_image
-        self._skin_pack = None # tutaj czy moze w pieces.py ???
-        self._chessboard_state = None
-        pygame.mixer.init()
+        self._window: Optional['pygame.Surface'] = None
+        self._board_surface: Optional['pygame.Rect'] = None
+        self._board_subsurfaces: Optional['tuple[pygame.Rect]'] = None
+        self._board_image: Optional['str'] = None # dodaj set_engine_board_image
+        self._skin_pack: Optional['str'] = None # tutaj czy moze w pieces.py ???
+        self._chessboard_state: Optional['list'] = None
+
+        self.beatbox = SoundEngine()
         pygame.init()
+
+    class Square(pygame.sprite.Sprite):
+        def __init__(self):
+            super(pygame.sprite.Sprite, self).__init__()
+            self.surf = BOARD_SQUARE_SIZE
+            self.start_point = (0, 0)
 
     def set_engine_window(self, new_window: pygame.Surface):
         assert type(new_window) is pygame.Surface
@@ -146,6 +172,12 @@ class GameEngine:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     raise SystemExit
+                if event.type == pygame.KEYDOWN:
+                    if event.key is pygame.key.key_code('return'):
+                        print('Enter')
+                    if event.key is pygame.key.key_code('escape'):
+                        engine.beatbox.play_click()
+                        GameEngine.test_gui()
 
             pygame.display.flip()
 
@@ -169,8 +201,6 @@ class GameEngine:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     raise SystemExit
-                if event.type == pygame.NOEVENT:
-                    pass
             # ...
 
             menu_interface = Menus()
@@ -182,9 +212,14 @@ class GameEngine:
 class SoundEngine:
     def __init__(self):
         pygame.mixer.init()
-    # do dokończenia
+        self.click = pygame.mixer.Sound('Sounds/Klik.wav')
+        self.volume = 0.7
+    # do dokończenia ?
+
+    def play_click(self):
+        pygame.mixer.Sound.play(self.click)
+        print("Playing sound!")
 
 
 test = GameEngine()
-# test.test_gui()
-test.run_game()
+test.test_gui()
