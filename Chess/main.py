@@ -70,6 +70,34 @@ class Chessboard:
     def place_piece(self, piece, row, col):
         self.board[row][col] = piece
 
+    def is_clear_path(self, start_row, start_col, end_row, end_col):
+        # Sprawdzanie czy ścieżka między dwoma polami jest pusta
+        diff_row = end_row - start_row
+        diff_col = end_col - start_col
+
+        # Sprawdź kierunek ruchu i odpowiednią oś
+        if diff_row == 0:
+            step = 1 if diff_col > 0 else -1
+            for col in range(start_col + step, end_col, step):
+                if self.board[start_row][col]:
+                    return False
+        elif diff_col == 0:
+            step = 1 if diff_row > 0 else -1
+            for row in range(start_row + step, end_row, step):
+                if self.board[row][start_col]:
+                    return False
+        else:
+            step_row = 1 if diff_row > 0 else -1
+            step_col = 1 if diff_col > 0 else -1
+            row, col = start_row + step_row, start_col + step_col
+            while row != end_row and col != end_col:
+                if self.board[row][col]:
+                    return False
+                row += step_row
+                col += step_col
+
+        return True
+
     def move_piece(self, turn, en_passant, start_row, start_col, end_row, end_col):
         piece = self.board[start_row][start_col]
         result, en_passant = self.is_valid_move(piece, turn, en_passant, start_row, start_col, end_row, end_col)
@@ -80,6 +108,28 @@ class Chessboard:
             self.board[end_row][end_col] = piece
             self.board[start_row][start_col] = ''
             piece.position = (end_row, end_col)
+
+            if isinstance(piece, Pawn) and (end_row == 0 or end_row == 7):
+                promotion_choice = input("Choose the promotion piece (Rook, Knight, Bishop, or Queen): ")
+                promoted_piece = None
+
+                # Stwórz instancję wybranej figury na podstawie wyboru gracza
+                if promotion_choice.lower() == 'rook':
+                    promoted_piece = Rook(piece.color)
+                elif promotion_choice.lower() == 'knight':
+                    promoted_piece = Knight(piece.color)
+                elif promotion_choice.lower() == 'bishop':
+                    promoted_piece = Bishop(piece.color)
+                elif promotion_choice.lower() == 'queen':
+                    promoted_piece = Queen(piece.color)
+
+                # Zamień piona na wybraną figurę
+                if promoted_piece:
+                    self.board[end_row][end_col] = promoted_piece
+                else:
+                    print("Invalid promotion choice. Defaulting to Queen.")
+                    self.board[end_row][end_col] = Queen(piece.color)
+
             turn = not turn
             return turn, en_passant
         else:
@@ -172,17 +222,17 @@ class Chessboard:
         elif isinstance(piece, Rook):
             # Logika dla wieży
             if start_row == end_row or start_col == end_col:
-                return True, None
+                return self.is_clear_path(start_row, start_col, end_row, end_col), None
         elif isinstance(piece, Bishop):
             # Logika dla gońca
             diff_row = abs(end_row - start_row)
             diff_col = abs(end_col - start_col)
-            return diff_row == diff_col, None
+            return self.is_clear_path(start_row, start_col, end_row, end_col) and diff_row == diff_col, None
         elif isinstance(piece, Queen):
             # Logika dla królowej
             diff_row = abs(end_row - start_row)
             diff_col = abs(end_col - start_col)
-            return (start_row == end_row or start_col == end_col) or (diff_row == diff_col), None
+            return self.is_clear_path(start_row, start_col, end_row, end_col) and (start_row == end_row or start_col == end_col or diff_row == diff_col), None
         elif isinstance(piece, King):
             # Logika dla króla
             diff_row = abs(end_row - start_row)
@@ -205,7 +255,6 @@ if __name__ == '__main__':
             print("White turn")
         else:
             print("Black turn")
-        print(en_passant)
         start_row = int(input("Enter start row: "))
         start_col = int(input("Enter start column: "))
         end_row = int(input("Enter end row: "))
