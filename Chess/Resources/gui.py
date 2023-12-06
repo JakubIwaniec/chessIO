@@ -28,6 +28,8 @@ BOARD_SQUARE_FIRST = (69, 69)
 BOARD_SQUARE_SIZE = (107, 107)
 BOARD_SQUARE_SPACING_PIXELS = 1
 REFRESH_RATE = 60
+# stałe SoundEngine
+VOLUME = 0.7
 # ---       ---
 
 
@@ -124,37 +126,33 @@ class BoardSquare(pygame.sprite.Sprite):
         self.is_selected: bool = False
         self.is_highlighted: bool = False
 
-    def switch_select(self):
+    def select(self):
         color_mask = pygame.Surface(BOARD_SQUARE_SIZE)
-        if self.is_selected:
-            color_mask.fill(self.marker_select)
-            color_mask.set_alpha(51)
-            self.image.blit(color_mask, dest=(0, 0), special_flags=pygame.BLENDMODE_BLEND)
-            self.is_selected = False
-        else:
-            self.is_selected = True
+        color_mask.fill(self.marker_select)
+        color_mask.set_alpha(51)
+        self.image.blit(color_mask, dest=(0, 0), special_flags=pygame.BLENDMODE_BLEND)
+        self.is_selected = True
 
-    def switch_highlight(self):
+    def highlight(self):
         color_mask = pygame.Surface(BOARD_SQUARE_SIZE)
-        if self.is_highlighted:
-            color_mask.fill(self.marker_highlight)
-            color_mask.set_alpha(25)
-            self.image.blit(color_mask, dest=(0, 0), special_flags=pygame.BLENDMODE_BLEND)
-            self.is_highlighted = False
-        else:
-            self.is_highlighted = True
+        color_mask.fill(self.marker_highlight)
+        color_mask.set_alpha(102)
+        self.image.blit(color_mask, dest=(0, 0), special_flags=pygame.BLENDMODE_BLEND)
+        self.is_highlighted = True
 
     def set_image(self, piece_element):
         if type(piece_element) is not str:
             print(type(piece_element))
             piece_element_image = pygame.image.load(piece_element.path_to_image).convert_alpha()
             piece_element_image = pygame.transform.scale(piece_element_image, BOARD_SQUARE_SIZE)
-            self.image.blit(piece_element_image, (0, 0))
+            # self.image.blit(piece_element_image, (0, 0))
+            self.image = piece_element_image
         else:
             transparent = pygame.Surface(BOARD_SQUARE_SIZE)
             transparent.fill((255, 255, 255))
-            transparent.set_colorkey((255, 255, 255))
-            self.image.blit(transparent, (0, 0))
+            # transparent.set_colorkey((255, 255, 255))
+            # self.image.blit(transparent, (0, 0))
+            self.image = transparent
 
 
 class GameEngine:
@@ -237,20 +235,26 @@ class GameEngine:
                 if event.type == pygame.KEYDOWN:
                     if event.key is pygame.key.key_code('return'):
                         # test
-                        sprites[0][0].switch_select()
+                        sprites[0][0].select()
                         print('Enter')
                     if event.key is pygame.key.key_code('backspace'):
                         # test
                         sprites[0][0].set_image(chessboard.board[0][0])
                         chessboard.move_piece(True, None, 1, 0, 3, 0)
+                        chessboard.move_piece(False, None, 6, 0, 4, 0)
                     if event.key is pygame.key.key_code('escape'):
                         engine.beatbox.play_click()
                         GameEngine.run_gui()
                     for row_index, row in enumerate(sprites):
                         for column_index, element in enumerate(sprites[row_index]):
-                            if not element.is_selected:
+                            if not element.is_selected and not element.is_highlighted:
                                 element.set_image(chessboard.board[row_index][column_index])
-                            board_surface.blit(sprites[row_index][column_index].image, sprites[row_index][column_index].start_point)
+                                board_surface.blit(element.image, element.start_point)
+                            else:
+                                sprites[0][0].select()
+                                sprites[3][3].highlight()
+                                board_surface.blit(element.image, element.start_point)
+                                sprites[0][0].is_selected = False
 
             window.blit(source=board_surface, dest=(0, 0))
             pygame.display.flip()
@@ -345,8 +349,13 @@ class SoundEngine:
     def __init__(self):
         pygame.mixer.init()
         self.click = pygame.mixer.Sound('Sounds/Klik.wav')
-        self.volume = 0.7
+        self._assert_volume_test()
+        self.volume = VOLUME
     # do dokończenia ?
+
+    @staticmethod
+    def _assert_volume_test():
+        assert (0 <= VOLUME <= 1)
 
     def play_click(self):
         pygame.mixer.Sound.play(self.click)
