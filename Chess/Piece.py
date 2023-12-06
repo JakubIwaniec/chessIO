@@ -8,9 +8,9 @@ class Pawn(Piece):
     def __init__(self, color):
         super().__init__(color)
         if self.color == 'White':
-            self.path_to_image = 'Images\\FigureSkins\\wP.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\wP-alpha.png'
         elif self.color == 'Black':
-            self.path_to_image = 'Images\\FigureSkins\\bP.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\bP-alpha.png'
 
     def __repr__(self):
         if self.color == 'White':
@@ -26,9 +26,9 @@ class Rook(Piece):
     def __init__(self, color):
         super().__init__(color)
         if self.color == 'White':
-            self.path_to_image = 'Images\\FigureSkins\\wR.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\wR-alpha.png'
         elif self.color == 'Black':
-            self.path_to_image = 'Images\\FigureSkins\\bR.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\bR-alpha.png'
 
     def __repr__(self):
         if self.color == 'White':
@@ -44,9 +44,9 @@ class Knight(Piece):
     def __init__(self, color):
         super().__init__(color)
         if self.color == 'White':
-            self.path_to_image = 'Images\\FigureSkins\\wN.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\wN-alpha.png'
         elif self.color == 'Black':
-            self.path_to_image = 'Images\\FigureSkins\\bN.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\bN-alpha.png'
 
     def __repr__(self):
         if self.color == 'White':
@@ -62,9 +62,9 @@ class Bishop(Piece):
     def __init__(self, color):
         super().__init__(color)
         if self.color == 'White':
-            self.path_to_image = 'Images\\FigureSkins\\wB.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\wB-alpha.png'
         elif self.color == 'Black':
-            self.path_to_image = 'Images\\FigureSkins\\bB.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\bB-alpha.png'
 
     def __repr__(self):
         if self.color == 'White':
@@ -80,9 +80,9 @@ class Queen(Piece):
     def __init__(self, color):
         super().__init__(color)
         if self.color == 'White':
-            self.path_to_image = 'Images\\FigureSkins\\wQ.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\wQ-alpha.png'
         elif self.color == 'Black':
-            self.path_to_image = 'Images\\FigureSkins\\bQ.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\bQ-alpha.png'
 
     def __repr__(self):
         if self.color == 'White':
@@ -98,9 +98,9 @@ class King(Piece):
     def __init__(self, color):
         super().__init__(color)
         if self.color == 'White':
-            self.path_to_image = 'Images\\FigureSkins\\wK.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\wK-alpha.png'
         elif self.color == 'Black':
-            self.path_to_image = 'Images\\FigureSkins\\bK.jpg'
+            self.path_to_image = 'Images\\FigureSkins\\png\\bK-alpha.png'
 
     def __repr__(self):
         if self.color == 'White':

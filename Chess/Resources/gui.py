@@ -28,7 +28,6 @@ BOARD_SQUARE_FIRST = (69, 69)
 BOARD_SQUARE_SIZE = (107, 107)
 BOARD_SQUARE_SPACING_PIXELS = 1
 REFRESH_RATE = 60
-
 # ---       ---
 
 
@@ -63,6 +62,7 @@ class Menus:
         assert WINDOW_WIDTH > MAIN_MENU_WIDTH
         assert WINDOW_HEIGHT > MAIN_MENU_HEIGHT
 
+    # ----  nadanie atrybutów obiektom menu   ----
     @staticmethod
     def _add_properties_menu(self) -> None:
         self.menu.add.button(title="Play", action=self.submenu_play)
@@ -101,6 +101,10 @@ class Menus:
     def _add_properties_submenu_authors(self) -> None:
         self.submenu_authors.add.label(AUTHORS, max_char=-1, font_size=20)
 
+    # ---------------------------------------------
+
+    # nadanie dźwięków obiektom menu (pygame_menu nie dzieli architektury z pygame) -
+    #   - patrz: SoundEngine
     @staticmethod
     def _add_properties_sounds(self) -> None:
         self.menu.set_sound(self._beatbox_gui, recursive=True)
@@ -109,35 +113,66 @@ class Menus:
         self.submenu_authors.set_sound(self._beatbox_gui, recursive=True)
 
 
+class BoardSquare(pygame.sprite.Sprite):
+    def __init__(self, start_point: tuple = (0, 0)):
+        super().__init__()
+        self.start_point = start_point
+        self.image = pygame.Surface(BOARD_SQUARE_SIZE, pygame.SRCALPHA)
+        self.rect = self.image.get_rect()
+        self.marker_select = pygame.Color(0, 255, 0)
+        self.marker_highlight = pygame.Color(0, 255, 0)
+        self.is_selected: bool = False
+        self.is_highlighted: bool = False
+
+    def switch_select(self):
+        color_mask = pygame.Surface(BOARD_SQUARE_SIZE)
+        if self.is_selected:
+            color_mask.fill(self.marker_select)
+            color_mask.set_alpha(51)
+            self.image.blit(color_mask, dest=(0, 0), special_flags=pygame.BLENDMODE_BLEND)
+            self.is_selected = False
+        else:
+            self.is_selected = True
+
+    def switch_highlight(self):
+        color_mask = pygame.Surface(BOARD_SQUARE_SIZE)
+        if self.is_highlighted:
+            color_mask.fill(self.marker_highlight)
+            color_mask.set_alpha(25)
+            self.image.blit(color_mask, dest=(0, 0), special_flags=pygame.BLENDMODE_BLEND)
+            self.is_highlighted = False
+        else:
+            self.is_highlighted = True
+
+    def set_image(self, piece_element):
+        if type(piece_element) is not str:
+            print(type(piece_element))
+            piece_element_image = pygame.image.load(piece_element.path_to_image).convert_alpha()
+            piece_element_image = pygame.transform.scale(piece_element_image, BOARD_SQUARE_SIZE)
+            self.image.blit(piece_element_image, (0, 0))
+        else:
+            transparent = pygame.Surface(BOARD_SQUARE_SIZE)
+            transparent.fill((255, 255, 255))
+            transparent.set_colorkey((255, 255, 255))
+            self.image.blit(transparent, (0, 0))
+
+
 class GameEngine:
+    """
+    Silnik gry - przechowuje/obsługuje obiekty graficzne,
+    nanosi figury na planszę, ma metody statyczne
+    do uruchamiania samej całej gry.
+    """
     def __init__(self):
         self._window: Optional['pygame.Surface'] = None
         self._board_surface: Optional['pygame.Rect'] = None
         self._board_subsurfaces: Optional['tuple[pygame.Rect]'] = None
         self._board_image: Optional['str'] = None # dodaj set_engine_board_image
-        self._skin_pack: Optional['str'] = None # tutaj czy moze w pieces.py ???
+        # self._skin_pack: Optional['str'] = None # tutaj czy moze w pieces.py ???
         self._chessboard_state: Optional['list'] = None
 
         self.beatbox = SoundEngine()
         pygame.init()
-
-    class BoardSquare(pygame.sprite.Sprite):
-        def __init__(self, start_point: tuple = (0, 0)):
-            super().__init__()
-            self.surf = pygame.Surface(BOARD_SQUARE_SIZE)
-            self.surf_rect = None
-            self._image = None
-            assert type(start_point) is tuple
-            self.start_point = start_point
-            self.surf.fill((0, 0, 255))
-
-        def set_image(self, piece_element: Chess.Piece.Rook):
-            print(piece_element)
-            assert type(piece_element) is Chess.Piece.Rook
-            piece_element_image = pygame.image.load(piece_element.path_to_image)
-            self.surf_rect = piece_element_image.get_rect()
-            self._image = piece_element_image
-            self.surf.blit(piece_element_image, (0, 0))
 
     def set_engine_window(self, new_window: pygame.Surface):
         assert type(new_window) is pygame.Surface
@@ -147,42 +182,52 @@ class GameEngine:
         assert type(new_board_surface) is pygame.Rect
         self._board_surface = new_board_surface
 
+    def set_engine_board_subsurfaces(self, new_board_subsurfaces: list[pygame.Rect]):
+        assert type(new_board_subsurfaces) is pygame.Rect
+        self._board_surface = new_board_subsurfaces
+
     def set_engine_chessboard_state(self, new_chessboard_state):
-        assert type(new_chessboard_state) is list
+        assert type(new_chessboard_state) is list and len(new_chessboard_state) == 8
+        for row_index, row in enumerate(new_chessboard_state):
+            assert len(new_chessboard_state[row_index]) == 8
         self._chessboard_state = new_chessboard_state
 
     @staticmethod
     def run_game():
+        """
+        print(chessboard.board[0]) # [r, n, b, q, k, b, n, r]
+        print(chessboard.board[0][0]) # Rook
+        print(type(chessboard.board[0][0])) # <class 'Chess.Piece.Rook'>
+        print(repr(chessboard.board[0][0])) # r
+        """
         chessboard = Chess.main.Chessboard()
         Chess.main.Chessboard.startgame(chessboard)
         print(chessboard.board)
-        for row in chessboard.board:
-            for element in row:
-                """
-                if type(chessboard.board[element]) is Chess.main.Rook:
-                    assert chessboard.board[element] is Chess.main.Rook
-                    if chessboard.board[element].__repr__ == 'r':
-                        pass
-                        # jeśli wieża:
-                        # weź obraz przechowywany w podklasach klasy pieces
-                        # otrzymaj wymiary danej subsurface kratki i współrzędną
-                print(" ", )
-                """
 
         chessboard.print_board()
-        window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
+        window = pygame.display.set_mode(size=(BOARD_WIDTH, BOARD_HEIGHT))
         board_surface = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT))
         board_image = pygame.image.load("Images\\Chessboards\\Szachownica3.jpg")
-        board_image = pygame.transform.scale(board_image, (BOARD_WIDTH, BOARD_HEIGHT))
-        board_surface.blit(board_image, (0, 0))
-        window.blit(board_surface, (0, 0))
-        sprite = GameEngine.BoardSquare()
-        sprite.set_image(chessboard.board[0][0])
-        board_surface.subsurface(sprite.surf_rect)
-        board_surface.blit(sprite._image, (0, 0))
-        pygame.display.flip()
+        board_image = pygame.transform.scale(surface=board_image, size=(BOARD_WIDTH, BOARD_HEIGHT))
+
+        board_surface.blit(source=board_image, dest=(0, 0))
+        sprites = [
+                [BoardSquare(start_point=(
+                    column_index * (BOARD_SQUARE_SIZE[0] + BOARD_SQUARE_SPACING_PIXELS) + BOARD_SQUARE_FIRST[0],
+                    row_index * (BOARD_SQUARE_SIZE[1] + BOARD_SQUARE_SPACING_PIXELS) + BOARD_SQUARE_FIRST[1]))
+                 for column_index in range(8)] for row_index in range(8)
+        ]
+
+        for row_index, row in enumerate(sprites):
+            for column_index, element in enumerate(sprites[row_index]):
+                pass
+
         engine = GameEngine()
         engine.set_engine_window(window)
+        engine.assign_board_state(chessboard.board, sprites, board_surface)
+
+        pygame.display.flip()
+
         is_running = True
         while is_running:
             for event in pygame.event.get():
@@ -191,15 +236,27 @@ class GameEngine:
                     raise SystemExit
                 if event.type == pygame.KEYDOWN:
                     if event.key is pygame.key.key_code('return'):
+                        # test
+                        sprites[0][0].switch_select()
                         print('Enter')
+                    if event.key is pygame.key.key_code('backspace'):
+                        # test
+                        sprites[0][0].set_image(chessboard.board[0][0])
+                        chessboard.move_piece(True, None, 1, 0, 3, 0)
                     if event.key is pygame.key.key_code('escape'):
                         engine.beatbox.play_click()
-                        GameEngine.test_gui()
+                        GameEngine.run_gui()
+                    for row_index, row in enumerate(sprites):
+                        for column_index, element in enumerate(sprites[row_index]):
+                            if not element.is_selected:
+                                element.set_image(chessboard.board[row_index][column_index])
+                            board_surface.blit(sprites[row_index][column_index].image, sprites[row_index][column_index].start_point)
 
+            window.blit(source=board_surface, dest=(0, 0))
             pygame.display.flip()
 
     @staticmethod
-    def test_gui():
+    def run_gui():
         # Podstawowa funkcja rysująca
         def update_background() -> None:
 
@@ -211,7 +268,7 @@ class GameEngine:
         # roboczy test, czy poprawnie załadowało plik .jpg
         print(bg_image.get_size())
 
-        # Główna pętla menu (tymczasowa)
+        # Główna pętla menu
         while True:
             # Obsługa wejść od użytkownika
             for event in pygame.event.get():
@@ -225,8 +282,66 @@ class GameEngine:
             pygame.display.flip()
             clock.tick(REFRESH_RATE)
 
+    def assign_board_state(self, new_state: list, board_sprites: list[list[BoardSquare]], draw_on: pygame.Surface):
+        """
+        Ta funkcja ma drukować figury na planszy na podstawie stanu planszy
+        ??? jak ma drukować wybraną figurę i sugerowane ruchy?
+        :param new_state:
+        :param board_sprites:
+        :param draw_on:
+        :return:
+        """
+        self.set_engine_chessboard_state(new_state)
+        self.set_engine_window(draw_on)
+
+        for row_index, row in enumerate(self._chessboard_state):
+            for element_index, element in enumerate(self._chessboard_state[row_index]):
+                print("(%i, %i)" % (row_index, element_index), end=' ')
+                if str(element) == 'Pawn':
+                    print("TO JEST PAWN -", end=' ')
+                    if str(repr(element)) == 'p':
+                        print("BIALY")
+                    elif str(repr(element)) == 'P':
+                        print("CZARNY")
+                elif str(element) == 'Rook':
+                    assert type(element) is Chess.Piece.Rook
+                    print("TO JEST ROOK -", end=' ')
+                    if str(repr(element)) == 'r':
+                        print("BIALY")
+                    elif str(repr(element)) == 'R':
+                        print("CZARNY")
+                elif str(element) == 'Knight':
+                    print("TO JEST KNIGHT -", end=' ')
+                    if str(repr(element)) == 'n':
+                        print("BIALY")
+                    elif str(repr(element)) == 'N':
+                        print("CZARNY")
+                elif str(element) == 'Bishop':
+                    print("TO JEST BISHOP -", end=' ')
+                    if str(repr(element)) == 'b':
+                        print("BIALY")
+                    elif str(repr(element)) == 'B':
+                        print("CZARNY")
+                elif str(element) == 'Queen':
+                    print("TO JEST QUEEN -", end=' ')
+                    if str(repr(element)) == 'q':
+                        print("BIALY")
+                    elif str(repr(element)) == 'Q':
+                        print("CZARNY")
+                elif str(element) == 'King':
+                    print("TO JEST KING -", end=' ')
+                    if str(repr(element)) == 'k':
+                        print("BIALY")
+                    elif str(repr(element)) == 'K':
+                        print("CZARNY")
+                else:
+                    print("''")
+
 
 class SoundEngine:
+    """
+    Silnik dźwiękowy (dla elementów z paczki pygame).
+    """
     def __init__(self):
         pygame.mixer.init()
         self.click = pygame.mixer.Sound('Sounds/Klik.wav')
@@ -238,5 +353,6 @@ class SoundEngine:
         print("Playing sound!")
 
 
+# przykładowe wywołanie obiektów w tym skrypcie
 test = GameEngine()
-test.test_gui()
+test.run_gui()
