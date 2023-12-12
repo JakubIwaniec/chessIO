@@ -109,6 +109,19 @@ class Chessboard:
             self.board[start_row][start_col] = ''
             piece.position = (end_row, end_col)
 
+            # Ustawienie has_moved dla króla i wieży po roszadzie
+            if isinstance(piece, King):
+                piece.has_moved = True
+                if end_col - start_col == 2:  # Roszada krótka (w prawo)
+                    rook = self.board[end_row][end_col - 1]
+                    rook.has_moved = True
+                elif start_col - end_col == 2:  # Roszada długa (w lewo)
+                    rook = self.board[end_row][end_col + 1]
+                    rook.has_moved = True
+
+            elif isinstance(piece, Rook):
+                piece.has_moved = True
+
             if isinstance(piece, Pawn) and (end_row == 0 or end_row == 7):
                 promotion_choice = input("Choose the promotion piece (Rook, Knight, Bishop, or Queen): ")
                 promoted_piece = None
@@ -235,9 +248,39 @@ class Chessboard:
             return self.is_clear_path(start_row, start_col, end_row, end_col) and (start_row == end_row or start_col == end_col or diff_row == diff_col), None
         elif isinstance(piece, King):
             # Logika dla króla
-            diff_row = abs(end_row - start_row)
-            diff_col = abs(end_col - start_col)
-            return diff_row <= 1 and diff_col <= 1, None
+            if not piece.has_moved:
+                # Warunki dla roszady
+                if end_col - start_col == 2:  # Roszada krótka (w prawo)
+                    if (
+                            not self.board[start_row][start_col + 1]
+                            and not self.board[start_row][start_col + 2]
+                            and isinstance(self.board[start_row][start_col + 3], Rook)
+                            and not self.board[start_row][start_col + 3].has_moved
+                    ):
+                        rook = self.board[start_row][start_col + 3]
+                        self.board[end_row][end_col - 1] = rook
+                        self.board[start_row][start_col + 3] = ''
+                        rook.position = (end_row, end_col - 1)
+
+                        return True, None
+
+                elif start_col - end_col == 2:  # Roszada długa (w lewo)
+                    if (
+                            not self.board[start_row][start_col - 1]
+                            and not self.board[start_row][start_col - 2]
+                            and not self.board[start_row][start_col - 3]
+                            and isinstance(self.board[start_row][start_col - 4], Rook)
+                            and not self.board[start_row][start_col - 4].has_moved
+                    ):
+                        rook = self.board[start_row][start_col - 4]
+                        self.board[end_row][end_col + 1] = rook
+                        self.board[start_row][start_col - 4] = ''
+                        rook.position = (end_row, end_col + 1)
+                        return True, None
+            else:
+                diff_row = abs(end_row - start_row)
+                diff_col = abs(end_col - start_col)
+                return diff_row <= 1 and diff_col <= 1, None
         return False, None
 
 

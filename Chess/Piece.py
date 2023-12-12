@@ -25,6 +25,7 @@ class Pawn(Piece):
 class Rook(Piece):
     def __init__(self, color):
         super().__init__(color)
+        self.has_moved = False
         if self.color == 'White':
             self.path_to_image = 'Images\\FigureSkins\\png\\wR-alpha.png'
         elif self.color == 'Black':
@@ -97,6 +98,7 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, color):
         super().__init__(color)
+        self.has_moved = False
         if self.color == 'White':
             self.path_to_image = 'Images\\FigureSkins\\png\\wK-alpha.png'
         elif self.color == 'Black':
