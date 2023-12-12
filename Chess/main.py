@@ -248,9 +248,8 @@ class Chessboard:
             return self.is_clear_path(start_row, start_col, end_row, end_col) and (start_row == end_row or start_col == end_col or diff_row == diff_col), None
         elif isinstance(piece, King):
             # Logika dla króla
-            if not piece.has_moved:
                 # Warunki dla roszady
-                if end_col - start_col == 2:  # Roszada krótka (w prawo)
+                if not piece.has_moved and end_col - start_col == 2:  # Roszada krótka (w prawo)
                     if (
                             not self.board[start_row][start_col + 1]
                             and not self.board[start_row][start_col + 2]
@@ -264,7 +263,7 @@ class Chessboard:
 
                         return True, None
 
-                elif start_col - end_col == 2:  # Roszada długa (w lewo)
+                elif not piece.has_moved and start_col - end_col == 2:  # Roszada długa (w lewo)
                     if (
                             not self.board[start_row][start_col - 1]
                             and not self.board[start_row][start_col - 2]
@@ -277,12 +276,26 @@ class Chessboard:
                         self.board[start_row][start_col - 4] = ''
                         rook.position = (end_row, end_col + 1)
                         return True, None
-            else:
-                diff_row = abs(end_row - start_row)
-                diff_col = abs(end_col - start_col)
-                return diff_row <= 1 and diff_col <= 1, None
+                else:
+                    diff_row = abs(end_row - start_row)
+                    diff_col = abs(end_col - start_col)
+                    return diff_row <= 1 and diff_col <= 1, None
         return False, None
 
+def is_white_king_on_board(board):
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+            if isinstance(piece, King) and piece.color == 'White':
+                return True
+    return False
+def is_black_king_on_board(board):
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+            if isinstance(piece, King) and piece.color == 'Black':
+                return True
+    return False
 
 # Użycie klas
 if __name__ == '__main__':
@@ -293,6 +306,7 @@ if __name__ == '__main__':
     en_passant = None
 
     continue_game = True
+
     while continue_game:
         if is_white_turn:
             print("White turn")
@@ -304,6 +318,12 @@ if __name__ == '__main__':
         end_col = int(input("Enter end column: "))
         is_white_turn, en_passant = chessboard.move_piece(is_white_turn, en_passant, start_row, start_col, end_row, end_col)
         chessboard.print_board()
+        if not is_white_king_on_board(chessboard.board):
+            print("Czarne wygrały")
+            break
+        elif not is_black_king_on_board(chessboard.board):
+            print("Białe wygrały")
+            break
         continue_game_input = input("Continue the game? (y/n): ")
         if continue_game_input.lower() != 'y':
             continue_game = False
